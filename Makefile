@@ -1,5 +1,5 @@
-TARGET = test_compiler
-OBJ = build/main.o build/error.o build/gc.o build/token.o build/lexer.o build/parser.o
+TARGET = kalsel
+OBJ = build/main.o build/error.o build/gc.o build/token.o build/lexer.o build/parser.o build/tac.o build/asmX86.o
 
 COMMAND = gcc -g -Iinclude -Wall 
 
@@ -24,3 +24,11 @@ build/lexer.o: src/lexer.c
 build/parser.o: src/parser.c
 	$(COMMAND) -c src/parser.c -o build/parser.o
 
+build/tac.o: src/tac.c
+	$(COMMAND) -c src/tac.c -o build/tac.o
+
+build/asmX86.o: src/asmX86.c
+	$(COMMAND) -c src/asmX86.c -o build/asmX86.o
+
+clean:
+	rm $(TARGET) build/*.o
