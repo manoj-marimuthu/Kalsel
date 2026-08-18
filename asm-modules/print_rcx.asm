@@ -1,8 +1,9 @@
 default rel
+
 section .data
 	digit db 1
-	line_break db 10
-
+	line_break db 10	
+	minus_char db '-'
 section .text
 
 global print_rcx
@@ -12,13 +13,26 @@ print_rcx:
 	mov rax,rcx
 	mov r12,10
 	mov r13,rsp
-
+	test rax,rax
+	js negative
 construct:
-	xor rdx,rdx
-	div r12 ; remainder is at  rdx
+	cqo
+	idiv r12 ; remainder is at  rdx
 	push rdx
 	cmp rax,0
 	jne construct
+	jmp deconstruct
+
+negative:
+	mov r14,rax ; store rax
+	mov rax,1
+	mov rdi,1
+	lea rsi,[minus_char]
+	mov rdx,1
+	syscall
+	mov rax,r14 ; restore rax
+	neg rax
+	jmp construct
 
 deconstruct:
 	pop rbx
