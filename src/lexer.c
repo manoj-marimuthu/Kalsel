@@ -42,7 +42,8 @@ void line_lexer(char* line,int line_no){
 			tok = Ks_Create_Token(T_OPERATOR);
 			tok->data.charData = line[i];
 			i++;
-		}else{
+		}
+		else{
 			Ks_Raise("lexer found an unknown token type",line_no,RUN_TIME_ERROR);
 		}
 		push_into_lexer_output(tok);	

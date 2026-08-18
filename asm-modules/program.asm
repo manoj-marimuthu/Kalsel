@@ -19,17 +19,23 @@ MOV rcx, [rbp - 8]
  
  
 call print_rcx 
-sub rsp, 56 
+sub rsp, 48 
 MOV qword [rbp - 32], 3 
 MOV qword [rbp - 40], 4 
 MOV rax, qword [rbp - 32] 
 SUB rax, qword [rbp - 40] 
 MOV qword [rbp - 32], rax 
-MOV qword [rbp - 48], 1 
-MOV rax, qword [rbp - 32] 
-ADD rax, qword [rbp - 48] 
-MOV qword [rbp - 32], rax 
 MOV rcx, [rbp - 32] 
+ 
+ 
+call print_rcx 
+sub rsp, 64 
+MOV qword [rbp - 48], 5 
+MOV qword [rbp - 56], 30 
+MOV rax, qword [rbp - 48] 
+SUB rax, qword [rbp - 56] 
+MOV qword [rbp - 48], rax 
+MOV rcx, [rbp - 48] 
  
  
 call print_rcx 

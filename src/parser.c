@@ -3,6 +3,7 @@
 #include <error.h>
 #include <parser.h>
 #include <lexer.h>
+#include <stdio.h>
 
 Ks_AstNode* root = NULL;
 Ks_AstNode* ast_tail = NULL;
@@ -87,10 +88,11 @@ static void push_node_to_root(Ks_AstNode* node){
 
 void Ks_Parse(int line_no){
 	current = lexer_output;
+	consume_newlines();
 	if(current && current->type == T_NUMBER){
 		Ks_AstNode* node = Ks_ParseAddSub();
 		push_node_to_root(node);		
-	}else{	
+	}else{
 		Ks_Raise("Unknown token found by Ks_Parse()",line_no,RUN_TIME_ERROR);
 	}
 }
