@@ -16,8 +16,8 @@ void Ks_WriteStart(char* fileName){
 	fprintf(fptr,"extern print_rcx \n");
 	fprintf(fptr,"extern exit_program \n");
 	fprintf(fptr,"_start: \n");
-	fprintf(fptr,"push rbp \n");
-	fprintf(fptr,"mov rbp,rsp \n");
+	fprintf(fptr,"\tpush rbp \n");
+	fprintf(fptr,"\tmov rbp,rsp \n");
 	fclose(fptr);
 }
 
@@ -26,12 +26,12 @@ void Ks_WriteEnd(char* fileName){
 	if(fptr == NULL){
 		Ks_Raise("File not found for compilation",-1,FILE_ERROR);
 	}
-	fprintf(fptr,"call exit_program \n");
+	fprintf(fptr, "\tcall exit_program \n");
 	fclose(fptr);	
 }
 
 static void call_print_rcx(FILE* fptr){
-	fprintf(fptr,"call print_rcx \n");
+	fprintf(fptr,"\tcall print_rcx \n");
 }
 
 void Ks_GenerateCode(char* fileName){
@@ -44,31 +44,49 @@ void Ks_GenerateCode(char* fileName){
 	int offset;
 	Ks_Instruction* last_instr= NULL;	
 	int needed_space = temp_id * 8;
-	fprintf(fptr,"sub rsp, %d \n",needed_space);
+	fprintf(fptr,"\tsub rsp, %d \n",needed_space);
 
 	while(inst){
 		if(inst->type == MOV_INST){
 			offset = inst->result_temp_id * 8; 
-			snprintf(asmCode, sizeof(asmCode), "MOV qword [rbp - %d], %d \n",offset,inst->numData);			
+			snprintf(asmCode, sizeof(asmCode), "\tMOV qword [rbp - %d], %d \n",offset,inst->numData);			
 		}else{
 			switch(inst->op){
 				case '+':
 					snprintf(asmCode,sizeof(asmCode), 
-					        "MOV rax, qword [rbp - %d] \n"
-						"ADD rax, qword [rbp - %d] \n"
-						"MOV qword [rbp - %d], rax \n"
+					        "\tMOV rax, qword [rbp - %d] \n"
+						"\tADD rax, qword [rbp - %d] \n"
+						"\tMOV qword [rbp - %d], rax \n"
 						,
 						inst->lhs_temp_id * 8,inst->rhs_temp_id * 8,inst->lhs_temp_id * 8
 					);
 					break;
 				case '-':
 					snprintf(asmCode,sizeof(asmCode), 
-						"MOV rax, qword [rbp - %d] \n"
-						 "SUB rax, qword [rbp - %d] \n"
-						 "MOV qword [rbp - %d], rax \n"
+						"\tMOV rax, qword [rbp - %d] \n"
+						 "\tSUB rax, qword [rbp - %d] \n"
+						 "\tMOV qword [rbp - %d], rax \n"
 						,
 						inst->lhs_temp_id * 8,inst->rhs_temp_id * 8,inst->lhs_temp_id * 8
 					);
+					break;
+				case '*':
+					snprintf(asmCode, sizeof(asmCode),
+					"\tMOV rax, qword [rbp - %d]\n"
+					"\tIMUL rax,qword [rbp - %d]\n"
+					"\tMOV qword [rbp - %d],rax\n"
+					,
+					inst->lhs_temp_id * 8, inst->rhs_temp_id * 8, inst->lhs_temp_id * 8);
+					break;
+				case '/':
+					snprintf(asmCode, sizeof(asmCode),
+					"\tMOV rax, qword [rbp - %d]\n"
+					"\tMOV rbx, qword [rbp - %d]\n"
+					"\tcqo\n"
+					"\tIDIV rbx\n"
+					"\tMOV qword [rbp - %d],rax \n"
+					,
+					inst->lhs_temp_id * 8, inst->rhs_temp_id * 8,inst->lhs_temp_id * 8);
 					break;
 				default:
 					break;
@@ -78,7 +96,7 @@ void Ks_GenerateCode(char* fileName){
 		last_instr = inst;
 		inst = inst->next;
 	}
-	snprintf(asmCode, sizeof(asmCode), "MOV rcx, [rbp - %d] \n",last_instr->result_temp_id * 8);
+	snprintf(asmCode, sizeof(asmCode), "\tMOV rcx, [rbp - %d] \n",last_instr->result_temp_id * 8);
 	fprintf(fptr, "%s \n \n", asmCode);
 	call_print_rcx(fptr);
 	fclose(fptr);
