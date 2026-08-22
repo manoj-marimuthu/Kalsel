@@ -1,47 +1,64 @@
 default rel
 
+section .bss
+	temp resb 256
+
+%define INITIAL_STACK_POINTER temp
+%define DIV_DENOMINATOR temp + 8
+%define RAX_TEMP temp + 16
+%define CURRENT_DIGIT temp + 24
+
 section .data
-	digit db 1
-	line_break db 10	
-	minus_char db '-'
+	line_break db 10
+	minus db '-'
+
 section .text
 
-global print_rcx
-global exit_program
+extern print_rcx
+extern exit_program
 
 print_rcx:
+	mov qword [INITIAL_STACK_POINTER],rsp	
+	mov qword [DIV_DENOMINATOR], 10
 	mov rax,rcx
-	mov r12,10
-	mov r13,rsp
 	test rax,rax
 	js negative
+
 construct:
 	cqo
-	idiv r12 ; remainder is at  rdx
+	idiv qword [DIV_DENOMINATOR] ; remainder is at rdx
 	push rdx
 	cmp rax,0
 	jne construct
 	jmp deconstruct
 
 negative:
-	mov r14,rax ; store rax
+	mov qword [RAX_TEMP], rax
 	mov rax,1
 	mov rdi,1
-	lea rsi,[minus_char]
+	lea rsi,[minus]
 	mov rdx,1
 	syscall
-	mov rax,r14 ; restore rax
+	mov rax, qword [RAX_TEMP]
 	neg rax
 	jmp construct
 
 deconstruct:
 	pop rbx
-	mov [digit],bl
-	add [digit],'0'
 	call print_digit
-	cmp r13,rsp
+	cmp rsp, qword [INITIAL_STACK_POINTER]
 	jne deconstruct
 	call print_line_break
+	ret
+
+print_digit:
+	mov qword [CURRENT_DIGIT], rbx
+	mov rax,1
+	mov rdi,1
+	add qword [CURRENT_DIGIT], '0'
+	lea rsi, qword [CURRENT_DIGIT]
+	mov rdx,1
+	syscall
 	ret
 
 print_line_break:
@@ -52,15 +69,11 @@ print_line_break:
 	syscall
 	ret
 
-print_digit:
-	mov rax,1
-	mov rdi,1
-	lea rsi,[digit]
-	mov rdx,1
-	syscall
-	ret
-	
 exit_program:
 	mov rax,60
-	mov rdi,0
-	syscall	
+	mov rdx,0
+	syscall
+
+
+
+
