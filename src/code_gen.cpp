@@ -10,6 +10,8 @@ static void attach_header(std::ofstream& file){
 	file << "section .text\n";
 	file << "global _start\n";
 	file << "extern print_number\n";
+	file << "extern print_newline\n";
+	file << "extern print_space\n";
 	file << "_start:\n";
 
 }
@@ -27,64 +29,73 @@ void code_gen(std::ofstream& file){
 	}
 	attach_header(file);
 	char inst_str[100];
-	for(const Ir_Instruction& inst : ir_instructions){
+	for(size_t i = 0;i < ir_instructions.size();i++){
+		Ir_Instruction inst = ir_instructions[i];
 		if(inst.type == Ir_InstructionType::MOV){
 			size_t offset = inst.temp_id;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], %d \n", offset*8, (int) inst.num_data);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], %d\n", offset*8, (int) inst.num_data);
 			file << inst_str;
 		}
 		else if(inst.type == Ir_InstructionType::MOV_FROM_ST){
 			size_t offset = inst.temp_id;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV RBX, qword [VBA + %zu] \n", inst.temp_id_2 * 8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV RBX, qword [VBA + %zu]\n", inst.temp_id_2 * 8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RBX \n", offset * 8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RBX\n", offset * 8);
 			file << inst_str;
 		}
 		else if(inst.type == Ir_InstructionType::PRINT){
-			size_t to_print_offset = inst.temp_id;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword [VBA + %zu] \n", to_print_offset*8);
-			file << inst_str;
-			file << "\tcall print_number \n";
+			while(true){
+				size_t to_print_offset = inst.temp_id;
+				snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword [VBA + %zu]\n", to_print_offset*8);
+				file << inst_str;
+				file << "\tcall print_number\n";
+				file << "\tcall print_space\n";
+				if(i + 1 >= ir_instructions.size() || ir_instructions[i+1].type != Ir_InstructionType::PRINT){
+					break;
+				}
+				inst = ir_instructions[++i];
+			}
+			file << "\tcall print_newline\n";
 		}
 		else if(inst.type == Ir_InstructionType::ADD){
 			size_t left_temp_id = inst.temp_id;
 			size_t right_temp_id = inst.temp_id_2;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword [VBA + %zu] \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword [VBA + %zu]\n", left_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tADD RAX, qword [VBA + %zu] \n", right_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tADD RAX, qword [VBA + %zu]\n", right_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX\n", left_temp_id*8);
 			file << inst_str;
 		}
 		else if(inst.type == Ir_InstructionType::SUB){
 			size_t left_temp_id = inst.temp_id;
 			size_t right_temp_id = inst.temp_id_2;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword [VBA + %zu] \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword [VBA + %zu]\n", left_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tSUB RAX, qword [VBA + %zu] \n", right_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tSUB RAX, qword [VBA + %zu]\n", right_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX\n", left_temp_id*8);
 			file << inst_str;
 		}
 		else if(inst.type == Ir_InstructionType::MUL){
 			size_t left_temp_id = inst.temp_id;
 			size_t right_temp_id = inst.temp_id_2;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword[VBA + %zu] \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword[VBA + %zu]\n", left_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tMUL qword [VBA + %zu] \n", right_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMUL qword [VBA + %zu]\n", right_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX\n", left_temp_id*8);
 			file << inst_str;
 		}
 		else if(inst.type == Ir_InstructionType::DIV){
 			size_t left_temp_id = inst.temp_id;
 			size_t right_temp_id = inst.temp_id_2;
 			file << "\t XOR RDX, RDX \n";
-			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword[VBA + %zu] \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword[VBA + %zu]\n", left_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tDIV qword [VBA + %zu] \n", right_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tDIV qword [VBA + %zu]\n", right_temp_id*8);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX \n", left_temp_id*8);
+			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX\n", left_temp_id*8);
 			file << inst_str;
 		}
 		else{

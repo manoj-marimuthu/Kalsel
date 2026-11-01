@@ -14,6 +14,7 @@ enum class Ir_InstructionType{
 	SUB,
 	DIV,
 	PRINT,
+	PRINT_CON,
 	NULL_NODE
 };
 

@@ -81,21 +81,25 @@ size_t generate_ir(const AstNode* node){
 		return result_temp_id;
 	}
 	else if(node && node->type == AstNodeType::IO_OUT){
-		size_t to_print_location_offset;
+		std::vector<size_t> locations;
 		AstNode* current = node->next.get();
-		char inst[100];
-		while(current != NULL){
-			to_print_location_offset = generate_ir(current);
-			snprintf(inst, sizeof(inst), "PRINT [VBA + %zu]", to_print_location_offset);
+		while(current != nullptr){
+			locations.push_back(generate_ir(current));
+			current = current->next.get();
+		}
+		for(const size_t& location: locations){
+			char inst[100];
+			snprintf(inst, sizeof(inst), "PRINT [VBA + %zu]\n", location * 8);
 			Ir_Instruction ir_inst(
 						Ir_InstructionType::PRINT,
 						inst,
-						to_print_location_offset
+						location
 					);
 			ir_instructions.push_back(ir_inst);
-			current = current->next.get();
+
 		}
-		return to_print_location_offset;
+		return locations[0];
+		
 	}
 	else{
 		throw std::runtime_error("Unknown ast type detected by Intermediate Code Generator \n");

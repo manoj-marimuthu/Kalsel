@@ -8,8 +8,7 @@ global print_number
 print_number:
 	push rbx
 	mov rbx, 10	
-	mov rdi, PRINT_BUFFER + 31
-	mov byte [rdi], 10
+	mov rdi, PRINT_BUFFER + 32
 
 convert:
 	xor rdx, rdx
