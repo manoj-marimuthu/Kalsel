@@ -53,7 +53,6 @@ static void COMPILE(std::ifstream& file,std::string& output_file_name, bool show
 	result = std::system(cmd);
 	if(result != 0) throw std::runtime_error("KALSEL failed to produce object files for target file \n");
 	std::cout << "COMPILATION to object files and linking succeeded" << std::endl;
-
 }
 
 int main(int argc, char* argv[]){

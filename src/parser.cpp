@@ -93,7 +93,6 @@ static AstNodePtr parseVariableAssignment(){
 					consume_semi_colon();
 				}
 				else{
-					std::cout << (int) current_token.type << std::endl;
 					throw std::runtime_error("Expected ';': after variable assignment \n");
 				}
 				return node;
@@ -115,7 +114,26 @@ static AstNodePtr parseVariableAssignment(){
 			std::cout << (int) current_token.type << std::endl;
 			throw std::runtime_error("Expected Identifier: after 'int', use a valid variable name \n");
 		}
-	}else{
+	}
+	else if(current_token.type == TokenType::IDENTIFIER){
+		const std::string variable_name = current_token.string_data;
+		consume();
+		if(current_token.type == TokenType::EQUAL){
+			consume();
+			auto node = std::make_unique<AstNode>(AstNodeType::ASSIGNMENT);
+			node->left = std::make_unique<AstNode>(AstNodeType::STRING, variable_name);
+			node->right = parseAddSub();
+			if(current_token.type == TokenType::SEMI_COLON){
+				consume_semi_colon();
+			}else{
+				throw std::runtime_error("Expected ';': after variable assignment \n");
+			}
+			return node;
+		}else{
+			throw std::runtime_error("Expected '=', after 'identifier' during variable initialization \n");	
+		}
+	}
+	else{
 		return nullptr;
 	}
 }
@@ -149,7 +167,10 @@ void Parse(){
 	current_token = tokens[0];
 	while(current_token.type != TokenType::END_OF_FILE){
 		consume_semi_colon();
-		if(current_token.type == TokenType::INT){
+		if(current_token.type == TokenType::INT  || 
+		   current_token.type == TokenType::IDENTIFIER
+		   )
+		{
 			auto node = parseVariableAssignment();
 			ast_nodes.push_back(std::move(node));
 		}

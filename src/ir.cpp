@@ -76,6 +76,20 @@ size_t generate_ir(const AstNode* node){
 		return op.temp_id;
 	}else if(node && node->type == AstNodeType::ASSIGNMENT){
 		std::string variable_name = node->left->string_data;
+		if(symbol_table.find(variable_name) != symbol_table.end()){
+			size_t original_offset = symbol_table[variable_name];
+			size_t new_offset = generate_ir(node->right.get());
+			char inst[100];
+			snprintf(inst, sizeof(inst), "MOV t%zu, t%zu", original_offset, new_offset);
+			Ir_Instruction ir_inst(
+					Ir_InstructionType::MOV_FROM_ST,
+					inst,
+					original_offset
+				      );
+			ir_inst.temp_id_2 = new_offset;
+			ir_instructions.push_back(ir_inst);
+			return new_offset;
+		}
 		size_t result_temp_id = generate_ir(node->right.get());
 		symbol_table[variable_name] = result_temp_id;
 		return symbol_table[variable_name];

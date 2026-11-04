@@ -16,7 +16,7 @@ previous statement in the later versions.
 ```
 + , - , *, /
 ```
-### Variable Declaration
+### Variable Declaration and Initialization
 
 ```
 int x = 10;
