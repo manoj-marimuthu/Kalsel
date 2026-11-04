@@ -97,7 +97,17 @@ static AstNodePtr parseVariableAssignment(){
 					throw std::runtime_error("Expected ';': after variable assignment \n");
 				}
 				return node;
-			}else{
+			}
+			else if(current_token.type == TokenType::SEMI_COLON){
+				consume();
+				auto node = std::make_unique<AstNode>(AstNodeType::ASSIGNMENT);
+				node->left = std::make_unique<AstNode>(AstNodeType::STRING, variable_name);
+				node->right = std::make_unique<AstNode>(AstNodeType::NUMBER);
+				node->right->num_data = 0;
+				return node;
+			}
+			else{
+				std::cout << (int) current_token.type << std::endl;
 				throw std::runtime_error("Expected '=': after variable name \n");
 				
 			}

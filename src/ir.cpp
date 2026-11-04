@@ -78,7 +78,7 @@ size_t generate_ir(const AstNode* node){
 		std::string variable_name = node->left->string_data;
 		size_t result_temp_id = generate_ir(node->right.get());
 		symbol_table[variable_name] = result_temp_id;
-		return result_temp_id;
+		return symbol_table[variable_name];
 	}
 	else if(node && node->type == AstNodeType::IO_OUT){
 		std::vector<size_t> locations;
