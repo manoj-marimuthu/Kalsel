@@ -16,6 +16,7 @@ previous statement in the later versions.
 ```
 + , - , *, /
 ```
+
 ### Variable Declaration and Initialization
 
 ```
@@ -23,9 +24,17 @@ int x = 10;
 int y = 20 + x;
 int z = 30 / y;
 ```
-
-Currently does not have variable initialization and arithemtic checks.
+You can also declare a variable first and reuse it.
+```
+int x;
+io << x;
+x = 20;
+io << x;
+```
+For the above snippet you will get 0 first, and 20 next, since I
+dont intend to store garbage value (inspired by int x{} in C++).
 It currently uses 64 bits for ```int``` type.
+
 ### io
 
 Can write to standard output using:

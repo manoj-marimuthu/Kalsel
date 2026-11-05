@@ -9,7 +9,7 @@
 #include<symbol_table.h>
 #include<unordered_map>
 
-size_t current_temp_id = 0;
+size_t current_offset = 0;
 std::vector<Ir_Instruction> ir_instructions = {};
 std::unordered_map<std::string, size_t> symbol_table = {};
 
@@ -20,29 +20,31 @@ size_t generate_ir(const AstNode* node){
 	
 	if(node->type == AstNodeType::NUMBER){
 		char inst[100];
-		snprintf(inst, sizeof(inst), "MOV t%zu, %d", current_temp_id, (int) node->num_data);
+		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], %d", current_offset * 8, (int) node->num_data);
 		Ir_Instruction ir_inst(
 					Ir_InstructionType::MOV,
 					std::string(inst),
-					current_temp_id++,	
+					current_offset,	
 					node->num_data
 					);
+		current_offset += 8;
 		ir_instructions.push_back(ir_inst);
-		return ir_inst.temp_id;
+		return ir_inst.offset_1;
 	}
 	else if(node && node->type == AstNodeType::IDENTIFIER){
 		char inst[100];
 		std::string identifier_name = node->string_data;
 		size_t offset = symbol_table[identifier_name];
-		snprintf(inst, sizeof(inst), "MOV t%zu, [VBA + %zu]", current_temp_id, 8 * offset);
+		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], [VBA + %zu]", current_offset * 8, offset);
 		Ir_Instruction ir_inst(
 					Ir_InstructionType::MOV_FROM_ST,
 					std::string(inst),
-					current_temp_id++
+					current_offset
 				);
-		ir_inst.temp_id_2 = 8 * offset;
+		current_offset += 8;
+		ir_inst.offset_2 = offset;
 		ir_instructions.push_back(ir_inst);
-		return ir_inst.temp_id;
+		return ir_inst.offset_1;
 	}
 	else if(node && node->type == AstNodeType::OPERATOR){
 		char inst[100];
@@ -51,20 +53,20 @@ size_t generate_ir(const AstNode* node){
 		size_t right = generate_ir(node->right.get());
 		switch(node->char_data){
 			case '+':
-				snprintf(inst, sizeof(inst), "ADD t%zu, t%zu", left, right);
+				snprintf(inst, sizeof(inst), "ADD [VBA + %zu], [VBA + %zu]", left, right);
 				ir_type = Ir_InstructionType::ADD;
 				break;
 
 			case '-':
-				snprintf(inst, sizeof(inst), "SUB t%zu, t%zu", left, right);
+				snprintf(inst, sizeof(inst), "SUB [VBA + %zu], [VBA + %zu]", left, right);
 				ir_type = Ir_InstructionType::SUB;
 				break;
 			case '*':
-				snprintf(inst, sizeof(inst), "MUL t%zu, t%zu", left, right);
+				snprintf(inst, sizeof(inst), "MUL [VBA + %zu], [VBA + %zu]", left, right);
 				ir_type = Ir_InstructionType::MUL;
 				break;
 			case '/':
-				snprintf(inst, sizeof(inst), "DIV t%zu, t%zu", left, right);
+				snprintf(inst, sizeof(inst), "DIV [VBA + %zu], [VBA + %zu]", left, right);
 				ir_type = Ir_InstructionType::DIV;
 				break;
 			default:
@@ -73,25 +75,25 @@ size_t generate_ir(const AstNode* node){
 		}
 		Ir_Instruction op(ir_type, inst, left, right);
 		ir_instructions.push_back(op);
-		return op.temp_id;
+		return op.offset_1;
 	}else if(node && node->type == AstNodeType::ASSIGNMENT){
 		std::string variable_name = node->left->string_data;
 		if(symbol_table.find(variable_name) != symbol_table.end()){
 			size_t original_offset = symbol_table[variable_name];
 			size_t new_offset = generate_ir(node->right.get());
 			char inst[100];
-			snprintf(inst, sizeof(inst), "MOV t%zu, t%zu", original_offset, new_offset);
+			snprintf(inst, sizeof(inst), "MOV [VBA + %zu], [VBA + %zu]", original_offset, new_offset);
 			Ir_Instruction ir_inst(
 					Ir_InstructionType::MOV_FROM_ST,
 					inst,
 					original_offset
 				      );
-			ir_inst.temp_id_2 = new_offset;
+			ir_inst.offset_2 = new_offset;
 			ir_instructions.push_back(ir_inst);
 			return new_offset;
 		}
-		size_t result_temp_id = generate_ir(node->right.get());
-		symbol_table[variable_name] = result_temp_id;
+		size_t result_offset = generate_ir(node->right.get());
+		symbol_table[variable_name] = result_offset;
 		return symbol_table[variable_name];
 	}
 	else if(node && node->type == AstNodeType::IO_OUT){
@@ -103,14 +105,13 @@ size_t generate_ir(const AstNode* node){
 		}
 		for(const size_t& location: locations){
 			char inst[100];
-			snprintf(inst, sizeof(inst), "PRINT [VBA + %zu]\n", location * 8);
+			snprintf(inst, sizeof(inst), "PRINT [VBA + %zu]\n", location);
 			Ir_Instruction ir_inst(
 						Ir_InstructionType::PRINT,
 						inst,
 						location
 					);
 			ir_instructions.push_back(ir_inst);
-
 		}
 		return locations[0];
 		
