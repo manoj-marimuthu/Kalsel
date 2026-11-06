@@ -17,6 +17,13 @@ previous statement in the later versions.
 + , - , *, /
 ```
 
+nested unary operations (+,-) are also supported.
+
+```
+io << --1 << -10 + +-1;
+```
+The above gives the output "1 -11".
+
 ### Variable Declaration and Initialization
 
 ```

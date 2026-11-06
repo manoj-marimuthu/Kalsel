@@ -38,7 +38,8 @@ static AstNodePtr parseAtom(){
 		auto node = std::make_unique<AstNode>(AstNodeType::IDENTIFIER, current_token.string_data);
 		consume();
 		return node;
-	}else if(current_token.type == TokenType::L_BRACK){
+	}
+	else if(current_token.type == TokenType::L_BRACK){
 		consume();
 		auto node = parseAddSub();
 		if(current_token.type == TokenType::R_BRACK){
@@ -53,9 +54,19 @@ static AstNodePtr parseAtom(){
 		throw std::runtime_error("Unknown token type found by parser. Valid token needed at the beginning \n");
 	}
 }
-
+static AstNodePtr parseUnary(){
+	if(current_token.type == TokenType::OPERATOR && (current_token.char_data == '+' || current_token.char_data == '-')){
+		char op = current_token.char_data;
+		consume();
+		auto node = std::make_unique<AstNode>(AstNodeType::OPERATOR, op);
+		node->left = std::make_unique<AstNode>(AstNodeType::NUMBER, 0.0);
+		node->right = parseUnary();
+		return node;
+	}
+	return parseAtom();
+}
 static AstNodePtr parseMulDiv(){
-	auto lhs = parseAtom();
+	auto lhs = parseUnary();
 	while(current_token.type == TokenType::OPERATOR && current_token.type != TokenType::SEMI_COLON &&
 	      current_token.type != TokenType::DOUBLE_LT && current_token.type != TokenType::R_BRACK &&
 	     (current_token.char_data == '*' || current_token.char_data == '/')
@@ -63,7 +74,7 @@ static AstNodePtr parseMulDiv(){
 		{
 			auto op_node = std::make_unique<AstNode>(AstNodeType::OPERATOR, current_token.char_data);
 			consume();
-			auto rhs = parseAtom();
+			auto rhs = parseUnary();
 			op_node->left = std::move(lhs);
 			op_node->right  = std::move(rhs);
 			lhs = std::move(op_node);
