@@ -25,6 +25,7 @@ static void consume_semi_colon(){
 
 using AstNodePtr = std::unique_ptr<AstNode>;
 static AstNodePtr parseVariableAssignment();
+static AstNodePtr parseAddSub();
 
 static AstNodePtr parseAtom(){
 	if(current_token.type == TokenType::NUMBER){
@@ -37,6 +38,15 @@ static AstNodePtr parseAtom(){
 		auto node = std::make_unique<AstNode>(AstNodeType::IDENTIFIER, current_token.string_data);
 		consume();
 		return node;
+	}else if(current_token.type == TokenType::L_BRACK){
+		consume();
+		auto node = parseAddSub();
+		if(current_token.type == TokenType::R_BRACK){
+			consume();
+		}else{
+			throw std::runtime_error("Missing ')' for expression (detected by parser) \n");
+		}
+		return node;
 	}
 	else{
 		std::cout << (int) current_token.type << std::endl;
@@ -47,7 +57,7 @@ static AstNodePtr parseAtom(){
 static AstNodePtr parseMulDiv(){
 	auto lhs = parseAtom();
 	while(current_token.type == TokenType::OPERATOR && current_token.type != TokenType::SEMI_COLON &&
-	      current_token.type != TokenType::DOUBLE_LT &&
+	      current_token.type != TokenType::DOUBLE_LT && current_token.type != TokenType::R_BRACK &&
 	     (current_token.char_data == '*' || current_token.char_data == '/')
 	     )
 		{
@@ -66,6 +76,7 @@ static AstNodePtr parseAddSub(){
 	while(current_token.type == TokenType::OPERATOR &&
  		(current_token.char_data == '+' || current_token.char_data == '-') &&
 		current_token.type != TokenType::SEMI_COLON &&
+		current_token.type != TokenType::R_BRACK &&
 		current_token.type != TokenType::DOUBLE_LT
 	     ){	
 			auto op_node = std::make_unique<AstNode>(AstNodeType::OPERATOR, current_token.char_data);
@@ -179,6 +190,7 @@ void Parse(){
 			ast_nodes.push_back(std::move(node));
 		}
 		else {
+			std::cout << (int) current_token.type << std::endl;
 			throw std::runtime_error("Unknown token type found by parser. Valid token type needed \n");
 		}	
 	}

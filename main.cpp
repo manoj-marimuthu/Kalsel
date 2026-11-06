@@ -21,7 +21,7 @@ void reset_states(){
 	current_token_index = 0;
 }
 
-static void COMPILE(std::ifstream& file,std::string& output_file_name, bool show_ir){
+static void COMPILE(std::ifstream& file,std::string& output_file_name, bool show_ir, bool show_token){
 	reset_states();
 	std::string line;
 	size_t line_no = 0;
@@ -29,10 +29,15 @@ static void COMPILE(std::ifstream& file,std::string& output_file_name, bool show
 		line_lexer(line, line_no++);
 	}
 	tokens.push_back(Token(TokenType::END_OF_FILE));
+	if(show_token){
+		std::cout  << "Kalsel Lexer Output:" << std::endl;
+		traverse_tokens(tokens);
+	}
 	Parse();
 	for(const auto& ast_node: ast_nodes){
 		generate_ir(ast_node.get());
 	}
+	std::cout << "\n";
 	if(show_ir){
 		std::cout << "KALSEL IR:" << std::endl;
 		traverse_ir_instructions();
@@ -57,6 +62,7 @@ static void COMPILE(std::ifstream& file,std::string& output_file_name, bool show
 
 int main(int argc, char* argv[]){
 	bool show_ir = false;
+	bool show_token = false;
 	std::string file_name{};
 	std::string output_file_name{};
 	if(argc < 2){
@@ -79,7 +85,11 @@ int main(int argc, char* argv[]){
 		}
 		else if(arg == "--ir"){
 			show_ir = true;	
-		}else if(arg.size() > 4 && arg.substr(arg.size() - 4) == ".kal"){
+		}
+		else if(arg == "--token"){
+			show_token = true;
+		}
+		else if(arg.size() > 4 && arg.substr(arg.size() - 4) == ".kal"){
 			file_name = arg;
 			only_meta = false;
 		}
@@ -108,6 +118,6 @@ int main(int argc, char* argv[]){
 	if(!file.is_open()){
 		throw std::runtime_error("Could' nt open file for compilation \n");
 	}
-	COMPILE(file, output_file_name, show_ir);
+	COMPILE(file, output_file_name, show_ir, show_token);
 	return 0;
 }

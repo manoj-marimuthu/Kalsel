@@ -48,6 +48,12 @@ void line_lexer(const std::string& line, size_t line_no){
 		else if(line[i] == '='){
 			tokens.push_back(Token(TokenType::EQUAL));
 			i++;
+		}else if(line[i] == '('){
+			tokens.push_back(Token(TokenType::L_BRACK));
+			i++;
+		}else if(line[i] == ')'){
+			tokens.push_back(Token(TokenType::R_BRACK));
+			i++;
 		}
 		else{
 			throw std::runtime_error("Undefined character found by lexer");
@@ -59,24 +65,39 @@ void traverse_tokens(const std::vector<Token>& tokens){
 	for(const Token& tok : tokens){
 		switch(tok.type){
 			case TokenType::IDENTIFIER:
-				std::cout << tok.string_data << "-> " << std::endl;
+				std::cout << tok.string_data << "-> ";
 				break;
 			case TokenType::NUMBER:
-				std::cout << tok.num_data << "-> " << std::endl;
+				std::cout << tok.num_data << "-> ";
 			case TokenType::OPERATOR:
-				std::cout << tok.char_data << "-> " << std::endl;
+				std::cout << tok.char_data << "-> ";
 				break;
 			case TokenType::INT:
-				std::cout << "INT -> " << std::endl;
+				std::cout << "INT -> ";
 				break;
 			case TokenType::SEMI_COLON:
-				std::cout  << "; ->" << std::endl;
+				std::cout  << "; -> ";
 				break;
 			case TokenType::EQUAL:
-				std::cout << "= ->" << std::endl;
+				std::cout << "= -> ";
+				break;
+			case TokenType::L_BRACK:
+				std::cout << "( -> ";
+				break;
+			case TokenType::R_BRACK:
+				std::cout << ") -> ";
+				break;
+			case TokenType::IO:
+				std::cout << "io -> ";
+				break;
+			case TokenType::DOUBLE_LT:
+				std::cout << "<< -> ";
+				break;
+			case TokenType::END_OF_FILE:
+				std::cout << "EOF \n";
 				break;
 			default:
-				std::cout << "UNKNOWN ->" << std::endl;
+				std::cout << "[UNKNOWN] ->" << std::endl;
 				break;
 		}
 	}	

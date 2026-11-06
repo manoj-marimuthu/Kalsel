@@ -11,6 +11,8 @@ enum class TokenType{
 	INT,
 	OPERATOR,
 	IO,
+	L_BRACK,
+	R_BRACK,
 	DOUBLE_LT,
 	END_OF_FILE
 };

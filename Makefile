@@ -24,4 +24,4 @@ build/ir.o: src/ir.cpp
 build/code_gen.o: src/code_gen.cpp
 	$(COM) $(CFLAGS) -c src/code_gen.cpp -o build/code_gen.o
 clean:
-	rm -Rf build/*.o kalsel asm-modules/program.asm
+	rm -Rf build/*.o kalsel asm-modules/program.asm *.elf
