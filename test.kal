@@ -1,1 +1,12 @@
-io << --1 << -+1;
+io << not 1;
+io << -20 / 2;
+int x = 1 and 0;
+io << x;
+
+int y =  0 or 0;
+io << y;
+
+x = not 1;
+io << x;
+x = not 0;
+io << x;

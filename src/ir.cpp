@@ -20,7 +20,7 @@ size_t generate_ir(const AstNode* node){
 	
 	if(node->type == AstNodeType::NUMBER){
 		char inst[100];
-		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], %d", current_offset * 8, (int) node->num_data);
+		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], %d", current_offset, (int) node->num_data);
 		Ir_Instruction ir_inst(
 					Ir_InstructionType::MOV,
 					std::string(inst),
@@ -35,7 +35,7 @@ size_t generate_ir(const AstNode* node){
 		char inst[100];
 		std::string identifier_name = node->string_data;
 		size_t offset = symbol_table[identifier_name];
-		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], [VBA + %zu]", current_offset * 8, offset);
+		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], [VBA + %zu]", current_offset, offset);
 		Ir_Instruction ir_inst(
 					Ir_InstructionType::MOV_FROM_ST,
 					std::string(inst),
@@ -76,7 +76,34 @@ size_t generate_ir(const AstNode* node){
 		Ir_Instruction op(ir_type, inst, left, right);
 		ir_instructions.push_back(op);
 		return op.offset_1;
-	}else if(node && node->type == AstNodeType::ASSIGNMENT){
+	}
+	else if(node && node->type == AstNodeType::AND){
+		char inst[100];
+		size_t left = generate_ir(node->left.get());
+		size_t right = generate_ir(node->right.get());
+		snprintf(inst, sizeof(inst), "AND [VBA + %zu], [VBA + %zu]", left, right);
+		Ir_Instruction ir_inst(Ir_InstructionType::AND, inst, left, right);
+		ir_instructions.push_back(ir_inst);
+		return left;
+	}
+	else if(node && node->type == AstNodeType::OR){
+		char inst[100];
+		size_t left = generate_ir(node->left.get());
+		size_t right = generate_ir(node->right.get());
+		snprintf(inst, sizeof(inst), "OR [VBA + %zu], [VBA + %zu]", left, right);
+		Ir_Instruction ir_inst(Ir_InstructionType::OR, inst, left, right);
+		ir_instructions.push_back(ir_inst);
+		return left;
+	}
+	else if(node && node->type == AstNodeType::NOT){
+		char inst[100];
+		size_t res = generate_ir(node->child.get());
+		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], NOT [VBA + %zu]", current_offset, res);
+		Ir_Instruction ir_inst(Ir_InstructionType::NOT, inst, current_offset, res);
+		ir_instructions.push_back(ir_inst);	
+		return current_offset++;
+	}
+	else if(node && node->type == AstNodeType::ASSIGNMENT){
 		std::string variable_name = node->left->string_data;
 		if(symbol_table.find(variable_name) != symbol_table.end()){
 			size_t original_offset = symbol_table[variable_name];

@@ -10,7 +10,10 @@ enum class AstNodeType{
 	STRING,
 	IDENTIFIER,
 	ASSIGNMENT,
-	IO_OUT
+	IO_OUT,
+	AND,
+	OR,
+	NOT
 };
 
 class AstNode{

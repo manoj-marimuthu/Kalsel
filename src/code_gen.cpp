@@ -79,7 +79,7 @@ void code_gen(std::ofstream& file){
 			size_t right_offset = inst.offset_2;
 			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword[VBA + %zu]\n", left_offset);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tMUL qword [VBA + %zu]\n", right_offset);
+			snprintf(inst_str, sizeof(inst_str), "\tIMUL qword [VBA + %zu]\n", right_offset);
 			file << inst_str;
 			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX\n", left_offset);
 			file << inst_str;
@@ -90,10 +90,56 @@ void code_gen(std::ofstream& file){
 			file << "\t XOR RDX, RDX \n";
 			snprintf(inst_str, sizeof(inst_str), "\tMOV RAX, qword[VBA + %zu]\n", left_offset);
 			file << inst_str;
-			snprintf(inst_str, sizeof(inst_str), "\tDIV qword [VBA + %zu]\n", right_offset);
+			file << "\tCQO\n";
+			snprintf(inst_str, sizeof(inst_str), "\tIDIV qword [VBA + %zu]\n", right_offset);
 			file << inst_str;
 			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RAX\n", left_offset);
 			file << inst_str;
+		}
+		else if(inst.type == Ir_InstructionType::AND){
+			size_t left = inst.offset_1;
+			size_t right = inst.offset_2;
+			// convert lhs to boolean
+			file << "\tMOV RAX, [VBA + " << left << "]\n";
+		        file << "\tTEST RAX, RAX\n";
+			file << "\tSETNE AL\n";
+			file << "\tMOVZX RAX, AL\n";
+			// convert rhs to boolean
+			file << "\tMOV RBX, [VBA + " << right << "]\n";
+			file << "\tTEST RBX, RBX\n";
+			file << "\tSETNE BL\n";
+			file << "\tMOVZX RBX, BL\n";
+			// perform bitwise AND between RAX, RBX which may
+			// only contain 1 or 0 due to bitwise AND
+			file << "\tAND RAX, RBX\n";
+			file << "\tMOV [VBA + " << left << "], RAX\n";
+		}
+		else if(inst.type == Ir_InstructionType::OR){
+			size_t left = inst.offset_1;
+			size_t right = inst.offset_2;
+			// convert lhs to boolean
+			file << "\tMOV RAX, [VBA + " << left << "]\n";
+		        file << "\tTEST RAX, RAX\n";
+			file << "\tSETNE AL\n";
+			file << "\tMOVZX RAX, AL\n";
+			// convert rhs to boolean
+			file << "\tMOV RBX, [VBA + " << right << "]\n";
+			file << "\tTEST RBX, RBX\n";
+			file << "\tSETNE BL\n";
+			file << "\tMOVZX RBX, BL\n";
+			// perform bitwise OR between RAX, RBX which may
+			// only contain 1 or 0 due to bitwise AND
+			file << "\tOR RAX, RBX\n";
+			file << "\tMOV [VBA + " << left << "], RAX\n";
+
+		}
+		else if(inst.type == Ir_InstructionType::NOT){
+			//convert the given input to boolean
+			file << "\tMOV RAX, [VBA + " << inst.offset_2 << "]\n";
+			file << "\tTEST RAX, RAX\n";
+			file << "\tSETE AL\n";
+			file << "\tMOVZX RAX, AL\n";
+			file << "\tMOV qword [VBA + " << inst.offset_1 << "], RAX\n";
 		}
 		else{
 			throw std::runtime_error("Unknown instruction type found during code generation \n");

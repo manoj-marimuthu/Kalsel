@@ -13,6 +13,9 @@ enum class Ir_InstructionType{
 	MUL,
 	SUB,
 	DIV,
+	AND,
+	OR,
+	NOT,
 	PRINT,
 	PRINT_CON,
 	NULL_NODE

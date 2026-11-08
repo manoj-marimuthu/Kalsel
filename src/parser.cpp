@@ -25,7 +25,7 @@ static void consume_semi_colon(){
 
 using AstNodePtr = std::unique_ptr<AstNode>;
 static AstNodePtr parseVariableAssignment();
-static AstNodePtr parseAddSub();
+static AstNodePtr parseExpression();
 
 static AstNodePtr parseAtom(){
 	if(current_token.type == TokenType::NUMBER){
@@ -41,7 +41,7 @@ static AstNodePtr parseAtom(){
 	}
 	else if(current_token.type == TokenType::L_BRACK){
 		consume();
-		auto node = parseAddSub();
+		auto node = parseExpression();
 		if(current_token.type == TokenType::R_BRACK){
 			consume();
 		}else{
@@ -54,6 +54,7 @@ static AstNodePtr parseAtom(){
 		throw std::runtime_error("Unknown token type found by parser. Valid token needed at the beginning \n");
 	}
 }
+
 static AstNodePtr parseUnary(){
 	if(current_token.type == TokenType::OPERATOR && (current_token.char_data == '+' || current_token.char_data == '-')){
 		char op = current_token.char_data;
@@ -65,16 +66,26 @@ static AstNodePtr parseUnary(){
 	}
 	return parseAtom();
 }
+
+static AstNodePtr parseNot(){
+	if(current_token.type == TokenType::NOT){
+		consume();
+		auto node = std::make_unique<AstNode>(AstNodeType::NOT);
+		node->child = parseExpression();
+		return node;
+	}
+	return parseUnary();
+}
+
 static AstNodePtr parseMulDiv(){
-	auto lhs = parseUnary();
-	while(current_token.type == TokenType::OPERATOR && current_token.type != TokenType::SEMI_COLON &&
-	      current_token.type != TokenType::DOUBLE_LT && current_token.type != TokenType::R_BRACK &&
+	auto lhs = parseNot();
+	while(current_token.type == TokenType::OPERATOR &&
 	     (current_token.char_data == '*' || current_token.char_data == '/')
 	     )
 		{
 			auto op_node = std::make_unique<AstNode>(AstNodeType::OPERATOR, current_token.char_data);
 			consume();
-			auto rhs = parseUnary();
+			auto rhs = parseNot();
 			op_node->left = std::move(lhs);
 			op_node->right  = std::move(rhs);
 			lhs = std::move(op_node);
@@ -85,10 +96,7 @@ static AstNodePtr parseMulDiv(){
 static AstNodePtr parseAddSub(){
 	auto lhs = parseMulDiv();
 	while(current_token.type == TokenType::OPERATOR &&
- 		(current_token.char_data == '+' || current_token.char_data == '-') &&
-		current_token.type != TokenType::SEMI_COLON &&
-		current_token.type != TokenType::R_BRACK &&
-		current_token.type != TokenType::DOUBLE_LT
+ 		(current_token.char_data == '+' || current_token.char_data == '-') 
 	     ){	
 			auto op_node = std::make_unique<AstNode>(AstNodeType::OPERATOR, current_token.char_data);
 			consume();
@@ -98,6 +106,36 @@ static AstNodePtr parseAddSub(){
 			lhs = std::move(op_node);
 		}
 	return lhs;
+}
+
+static AstNodePtr parseAnd(){
+	auto lhs = parseAddSub();
+	while(current_token.type == TokenType::AND){
+		auto op_node = std::make_unique<AstNode>(AstNodeType::AND);
+		consume();
+		auto rhs = parseAddSub();
+		op_node->left = std::move(lhs);
+		op_node->right = std::move(rhs);
+		lhs = std::move(op_node);
+	}
+	return lhs;
+}
+
+static AstNodePtr parseOr(){
+	auto lhs = parseAnd();
+	while(current_token.type == TokenType::OR){
+		auto op_node = std::make_unique<AstNode>(AstNodeType::OR);
+		consume();
+		auto rhs = parseAnd();
+		op_node->left = std::move(lhs);
+		op_node->right = std::move(rhs);
+		lhs = std::move(op_node);
+	}
+	return lhs;
+}
+
+static AstNodePtr parseExpression(){
+	return parseOr();
 }
 
 static AstNodePtr parseVariableAssignment(){
@@ -110,7 +148,7 @@ static AstNodePtr parseVariableAssignment(){
 		 		consume();
 				auto node = std::make_unique<AstNode>(AstNodeType::ASSIGNMENT);
 				node->left = std::make_unique<AstNode>(AstNodeType::STRING, variable_name);
-				node->right = parseAddSub();
+				node->right = parseExpression();
 				if(current_token.type == TokenType::SEMI_COLON){
 					consume_semi_colon();
 				}
@@ -144,7 +182,7 @@ static AstNodePtr parseVariableAssignment(){
 			consume();
 			auto node = std::make_unique<AstNode>(AstNodeType::ASSIGNMENT);
 			node->left = std::make_unique<AstNode>(AstNodeType::STRING, variable_name);
-			node->right = parseAddSub();
+			node->right = parseExpression();
 			if(current_token.type == TokenType::SEMI_COLON){
 				consume_semi_colon();
 			}else{
@@ -168,7 +206,7 @@ AstNodePtr parseIo(){
 			AstNode* tail = node.get();
 			while(current_token.type == TokenType::DOUBLE_LT){
 				consume();
-				auto to_print = parseAddSub();
+				auto to_print = parseExpression();
 				if(!to_print){
 					throw std::runtime_error("Expected an expression after '<<' \n");
 				}

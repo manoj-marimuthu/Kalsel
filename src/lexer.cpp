@@ -24,6 +24,14 @@ void line_lexer(const std::string& line, size_t line_no){
 			else if(identifier_name == "io"){
 				tokens.push_back(Token(TokenType::IO));
 			}
+			else if(identifier_name == "and"){
+				tokens.push_back(Token(TokenType::AND));
+			}
+			else if(identifier_name == "or"){
+				tokens.push_back(Token(TokenType::OR));
+			}else if(identifier_name == "not"){
+				tokens.push_back(Token(TokenType::NOT));
+			}
 			else{
 				tokens.push_back(Token(TokenType::IDENTIFIER, identifier_name));
 			}
@@ -46,14 +54,39 @@ void line_lexer(const std::string& line, size_t line_no){
 			i++;
 		}
 		else if(line[i] == '='){
-			tokens.push_back(Token(TokenType::EQUAL));
 			i++;
+			if(i < n && line[i + 1] == '='){
+				tokens.push_back(Token(TokenType::EQ));
+				i++;
+				continue;
+			}
+			tokens.push_back(Token(TokenType::EQUAL));
 		}else if(line[i] == '('){
 			tokens.push_back(Token(TokenType::L_BRACK));
 			i++;
 		}else if(line[i] == ')'){
 			tokens.push_back(Token(TokenType::R_BRACK));
 			i++;
+		}
+		else if(line[i] == '<'){
+			i++;
+			if(i < n && line[i] == '='){
+				tokens.push_back(Token(TokenType::LEQ));
+				i++;
+			}
+			tokens.push_back(Token(TokenType::LT));
+		}
+		else if(line[i] == '>'){
+			i++;
+			if(i < n && line[i] == '='){
+				tokens.push_back(Token(TokenType::GEQ));
+				i++;
+			}
+			tokens.push_back(Token(TokenType::GT));
+		}
+		else if(i + 1 < n && line[i] == '!' && line[i + 1] == '='){
+			i += 2;
+			tokens.push_back(Token(TokenType::NEQ));
 		}
 		else{
 			throw std::runtime_error("Undefined character found by lexer");
@@ -71,6 +104,15 @@ void traverse_tokens(const std::vector<Token>& tokens){
 				std::cout << tok.num_data << "-> ";
 			case TokenType::OPERATOR:
 				std::cout << tok.char_data << "-> ";
+				break;
+			case TokenType::AND:
+				std::cout << "AND ->" << "->";
+				break;
+			case TokenType::OR:
+				std::cout << "OR ->" << "->";
+				break;
+			case TokenType::NOT:
+				std::cout << "NOT ->" << "->";
 				break;
 			case TokenType::INT:
 				std::cout << "INT -> ";
