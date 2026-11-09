@@ -100,8 +100,51 @@ size_t generate_ir(const AstNode* node){
 		size_t res = generate_ir(node->child.get());
 		snprintf(inst, sizeof(inst), "MOV [VBA + %zu], NOT [VBA + %zu]", current_offset, res);
 		Ir_Instruction ir_inst(Ir_InstructionType::NOT, inst, current_offset, res);
-		ir_instructions.push_back(ir_inst);	
-		return current_offset++;
+		ir_instructions.push_back(ir_inst);
+		size_t temp = current_offset;
+		current_offset += 8;	
+		return temp;
+	}
+	else if(node && (node->type == AstNodeType::GT || node->type == AstNodeType::LT ||
+		node->type == AstNodeType::GEQ || node->type == AstNodeType::LEQ ||
+		node->type == AstNodeType::EQ || node->type == AstNodeType::NEQ)){
+		char inst[100];
+		size_t left = generate_ir(node->left.get());
+		size_t right = generate_ir(node->right.get());
+		std::string op_str;
+		Ir_InstructionType ir_type;
+		switch(node->type){
+			case AstNodeType::GT:
+				op_str = ">";
+				ir_type = Ir_InstructionType::GT;
+				break;
+			case AstNodeType::LT:
+				ir_type = Ir_InstructionType::LT;
+				op_str = "<";
+				break;
+			case AstNodeType::GEQ:
+				ir_type = Ir_InstructionType::GEQ;
+				op_str = ">=";
+				break;
+			case AstNodeType::LEQ:
+				ir_type = Ir_InstructionType::LEQ;
+				op_str = "<=";
+				break;
+			case AstNodeType::EQ:
+				ir_type = Ir_InstructionType::EQ;
+				op_str = "==";
+				break;
+			case AstNodeType::NEQ:
+				ir_type = Ir_InstructionType::NEQ;
+				op_str = "!=";
+				break;
+			default:
+				throw std::runtime_error("Unknown relational operator found by ir genertor\n");
+		}
+		snprintf(inst, sizeof(inst), "\tMOV [VBA + %zu], [VBA + %zu] %s [VBA + %zu]", left, left, op_str.c_str(), right);
+	       	Ir_Instruction ir_inst(ir_type, inst, left, right);
+		ir_instructions.push_back(ir_inst);
+		return left;
 	}
 	else if(node && node->type == AstNodeType::ASSIGNMENT){
 		std::string variable_name = node->left->string_data;

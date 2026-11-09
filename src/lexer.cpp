@@ -55,7 +55,7 @@ void line_lexer(const std::string& line, size_t line_no){
 		}
 		else if(line[i] == '='){
 			i++;
-			if(i < n && line[i + 1] == '='){
+			if(i < n && line[i] == '='){
 				tokens.push_back(Token(TokenType::EQ));
 				i++;
 				continue;
@@ -73,6 +73,7 @@ void line_lexer(const std::string& line, size_t line_no){
 			if(i < n && line[i] == '='){
 				tokens.push_back(Token(TokenType::LEQ));
 				i++;
+				continue;
 			}
 			tokens.push_back(Token(TokenType::LT));
 		}
@@ -81,6 +82,7 @@ void line_lexer(const std::string& line, size_t line_no){
 			if(i < n && line[i] == '='){
 				tokens.push_back(Token(TokenType::GEQ));
 				i++;
+				continue;
 			}
 			tokens.push_back(Token(TokenType::GT));
 		}

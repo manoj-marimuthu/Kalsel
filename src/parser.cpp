@@ -71,7 +71,7 @@ static AstNodePtr parseNot(){
 	if(current_token.type == TokenType::NOT){
 		consume();
 		auto node = std::make_unique<AstNode>(AstNodeType::NOT);
-		node->child = parseExpression();
+		node->child = parseNot();
 		return node;
 	}
 	return parseUnary();
@@ -108,12 +108,63 @@ static AstNodePtr parseAddSub(){
 	return lhs;
 }
 
-static AstNodePtr parseAnd(){
+static AstNodePtr parseRelational(){
 	auto lhs = parseAddSub();
+	if(current_token.type == TokenType::LT || current_token.type == TokenType::GT ||
+	   current_token.type == TokenType::GEQ || current_token.type == TokenType::LEQ
+	){
+		std::unique_ptr<AstNode> op_node;
+		switch(current_token.type){
+			case TokenType::LT:
+				op_node = std::make_unique<AstNode>(AstNodeType::LT);
+				break;
+			case TokenType::GT:
+				op_node = std::make_unique<AstNode>(AstNodeType::GT);
+				break;
+			case TokenType::LEQ:
+				op_node = std::make_unique<AstNode>(AstNodeType::LEQ);
+				break;
+			case TokenType::GEQ:
+				op_node = std::make_unique<AstNode>(AstNodeType::GEQ);
+				break;
+			default:
+				std::cout << (int) current_token.type << std::endl;
+				throw std::runtime_error("Unknown token type found at relational parsing \n");
+				break;
+		}
+		consume();
+		auto rhs = parseAddSub();
+		op_node->left = std::move(lhs);
+		op_node->right = std::move(rhs);
+		lhs = std::move(op_node);
+	}
+	return lhs;
+}
+
+static AstNodePtr parseEquality(){
+	auto lhs = parseRelational();
+	if(current_token.type == TokenType::EQ || current_token.type == TokenType::NEQ){
+		std::unique_ptr<AstNode> op_node;
+		if(current_token.type == TokenType::EQ){
+			op_node = std::make_unique<AstNode>(AstNodeType::EQ);
+		}else{
+			op_node = std::make_unique<AstNode>(AstNodeType::NEQ);
+		}
+		consume();
+		auto rhs = parseRelational();
+		op_node->left = std::move(lhs);
+		op_node->right = std::move(rhs);
+		lhs = std::move(op_node);
+	}
+	return lhs;
+}
+
+static AstNodePtr parseAnd(){
+	auto lhs = parseEquality();
 	while(current_token.type == TokenType::AND){
 		auto op_node = std::make_unique<AstNode>(AstNodeType::AND);
 		consume();
-		auto rhs = parseAddSub();
+		auto rhs = parseEquality();
 		op_node->left = std::move(lhs);
 		op_node->right = std::move(rhs);
 		lhs = std::move(op_node);

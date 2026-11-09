@@ -18,6 +18,12 @@ enum class Ir_InstructionType{
 	NOT,
 	PRINT,
 	PRINT_CON,
+	GT,
+	LT,
+	GEQ,
+	LEQ,
+	EQ,
+	NEQ,
 	NULL_NODE
 };
 

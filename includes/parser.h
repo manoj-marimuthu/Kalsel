@@ -13,7 +13,13 @@ enum class AstNodeType{
 	IO_OUT,
 	AND,
 	OR,
-	NOT
+	NOT,
+	GT,
+	LT,
+	GEQ,
+	LEQ,
+	EQ,
+	NEQ
 };
 
 class AstNode{

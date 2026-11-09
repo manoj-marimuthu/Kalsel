@@ -1,12 +1,8 @@
-io << not 1;
-io << -20 / 2;
-int x = 1 and 0;
-io << x;
+io << 1 > 2; 
+io << 4 < 2;
 
-int y =  0 or 0;
-io << y;
+io << 7 == 9;
+io << 8 != 9;
 
-x = not 1;
-io << x;
-x = not 0;
-io << x;
+io << 1 >= 1;
+io << 3 <= 20;
