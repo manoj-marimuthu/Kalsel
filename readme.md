@@ -17,46 +17,30 @@ previous statement in the later versions.
 + , - , *, /
 ```
 
-nested unary operations (+,-) are also supported.
+### Relational Operations
 
 ```
-io << --1 << -10 + +-1;
+> , < , >= , <= , != , == 
 ```
-The above gives the output "1 -11".
 
 ### Variable Declaration and Initialization
 
 ```
 int x = 10;
-int y = 20 + x;
-int z = 30 / y;
+int y;
+y = 20;
 ```
-You can also declare a variable first and reuse it.
-```
-int x;
-io << x;
-x = 20;
-io << x;
-```
-For the above snippet you will get 0 first, and 20 next, since I
-dont intend to store garbage value (inspired by int x{} in C++).
-It currently uses 64 bits for ```int``` type.
 
 ### io
-
-Can write to standard output using:
 
 ```
 io << 10;
 io << x << y + 2;
 ```
 
-The '<<' chain, ensures there is a whitespace between each term just like C++.
-
 ### meta
 
-The compiler accepts flags as command line arguments.
-
+The compiler accepts flags from the command line.
 <table>
     <tr>
         <td>Command</td>
