@@ -9,6 +9,7 @@
 enum class Ir_InstructionType{
 	MOV,
 	MOV_FROM_ST,
+	MOV_TO_CB,
 	ADD,
 	MUL,
 	SUB,
@@ -24,6 +25,9 @@ enum class Ir_InstructionType{
 	LEQ,
 	EQ,
 	NEQ,
+	IF,
+	JMP_CON,
+	AS_IT_IS,
 	NULL_NODE
 };
 
@@ -46,6 +50,7 @@ class Ir_Instruction{
 };
 
 extern size_t current_offset;
+extern size_t current_if;
 extern std::vector<Ir_Instruction> ir_instructions;
 size_t generate_ir(const AstNode* node);
 void traverse_ir_instructions();

@@ -273,25 +273,70 @@ AstNodePtr parseIo(){
 	}
 	return nullptr;
 }
+static AstNodePtr parseBlock();
 
+static AstNodePtr parseIf(){
+	if(current_token.type == TokenType::IF){
+		consume();
+		if(current_token.type == TokenType::L_BRACK){
+			consume();
+			auto condition = parseExpression();
+			if(current_token.type == TokenType::R_BRACK){
+				consume();
+				if(current_token.type == TokenType::L_PAREN){
+					consume();
+					auto node = std::make_unique<AstNode>(AstNodeType::IF);
+					node->child = std::move(condition);
+					while(current_token.type != TokenType::R_PAREN
+						&& current_token.type != TokenType::END_OF_FILE){
+						auto stmt = parseBlock();
+						node->instructions.push_back(std::move(stmt));
+					}
+					if(current_token.type == TokenType::R_PAREN){
+						consume();
+					}else{
+						throw std::runtime_error("Exprect a closing '}' in if block \n");
+					}
+					return node;
+				}else{
+					throw std::runtime_error("Expected a '{' in if block \n");
+				}
+			}
+			else{
+				throw std::runtime_error("Expected a closing ')' after condition in if block \n");
+			}
+		}else{
+			throw std::runtime_error("Expected a '(' for condition in if block \n");
+		}
+	}
+	return nullptr;
+}
+
+AstNodePtr parseBlock(){
+	consume_semi_colon();
+	std::unique_ptr<AstNode> node;
+	if(current_token.type == TokenType::INT  || 
+	   current_token.type == TokenType::IDENTIFIER
+	   )
+	{
+		node = parseVariableAssignment();
+	}
+	else if(current_token.type == TokenType::IO){
+		node = parseIo();
+	}
+	else if(current_token.type == TokenType::IF){
+		node = parseIf();
+	}
+	else {
+		std::cout << (int) current_token.type << std::endl;
+		throw std::runtime_error("Unknown token type found by parser. Valid token type needed \n");
+	}
+	return node;
+}
 void Parse(){
 	current_token = tokens[0];
 	while(current_token.type != TokenType::END_OF_FILE){
-		consume_semi_colon();
-		if(current_token.type == TokenType::INT  || 
-		   current_token.type == TokenType::IDENTIFIER
-		   )
-		{
-			auto node = parseVariableAssignment();
-			ast_nodes.push_back(std::move(node));
-		}
-		else if(current_token.type == TokenType::IO){
-			auto node = parseIo();
-			ast_nodes.push_back(std::move(node));
-		}
-		else {
-			std::cout << (int) current_token.type << std::endl;
-			throw std::runtime_error("Unknown token type found by parser. Valid token type needed \n");
-		}	
+		auto node = parseBlock();
+		ast_nodes.push_back(std::move(node));
 	}
 }

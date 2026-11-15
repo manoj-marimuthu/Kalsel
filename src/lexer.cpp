@@ -32,6 +32,12 @@ void line_lexer(const std::string& line, size_t line_no){
 			}else if(identifier_name == "not"){
 				tokens.push_back(Token(TokenType::NOT));
 			}
+			else if(identifier_name  == "if"){
+				tokens.push_back(Token(TokenType::IF));
+			}
+			else if(identifier_name == "else"){
+				tokens.push_back(Token(TokenType::ELSE));
+			}
 			else{
 				tokens.push_back(Token(TokenType::IDENTIFIER, identifier_name));
 			}
@@ -67,6 +73,12 @@ void line_lexer(const std::string& line, size_t line_no){
 		}else if(line[i] == ')'){
 			tokens.push_back(Token(TokenType::R_BRACK));
 			i++;
+		}else if(line[i] == '{'){
+			tokens.push_back(Token(TokenType::L_PAREN));
+			i++;	
+		}else if(line[i] == '}'){
+			tokens.push_back(Token(TokenType::R_PAREN));
+			i++;
 		}
 		else if(line[i] == '<'){
 			i++;
@@ -91,6 +103,7 @@ void line_lexer(const std::string& line, size_t line_no){
 			tokens.push_back(Token(TokenType::NEQ));
 		}
 		else{
+			std::cout << line[i] << std::endl;
 			throw std::runtime_error("Undefined character found by lexer");
 		}
 	}

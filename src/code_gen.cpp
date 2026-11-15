@@ -6,6 +6,7 @@
 
 static void attach_header(std::ofstream& file){
 	file << "section .bss\n";
+	file << "\tCB resb 8\n"; 
 	file << "\tVBA resb " << current_offset << "\n";
 	file << "section .text\n";
 	file << "global _start\n";
@@ -40,6 +41,11 @@ void code_gen(std::ofstream& file){
 			file << inst_str;
 			snprintf(inst_str, sizeof(inst_str), "\tMOV qword [VBA + %zu], RBX\n", inst.offset_1);
 			file << inst_str;
+		}
+		else if(inst.type == Ir_InstructionType::MOV_TO_CB){
+			// mov to condition buffer
+			file << "\tMOV RBX, qword [VBA + " << inst.offset_1 << "]\n";
+			file << "\tMOV qword [CB], RBX\n";
 		}
 		else if(inst.type == Ir_InstructionType::PRINT){
 			while(true){
@@ -173,6 +179,12 @@ void code_gen(std::ofstream& file){
 			file << "\t" << operation << " AL\n";
 		        file << "\tMOVZX RAX, AL\n";
 			file << "\tMOV qword [VBA + " << inst.offset_1 << "], RAX\n";	
+		}
+		else if(inst.type == Ir_InstructionType::JMP_CON){
+			file << "\tJNE .con_" << inst.offset_1 << "\n";
+		}
+		else if(inst.type == Ir_InstructionType::AS_IT_IS){
+			file << inst.ir_instruction_string;
 		}
 		else{
 			throw std::runtime_error("Unknown instruction type found during code generation \n");

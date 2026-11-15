@@ -10,6 +10,8 @@
 #include<unordered_map>
 
 size_t current_offset = 0;
+size_t continue_count = 0;
+
 std::vector<Ir_Instruction> ir_instructions = {};
 std::unordered_map<std::string, size_t> symbol_table = {};
 
@@ -185,6 +187,45 @@ size_t generate_ir(const AstNode* node){
 		}
 		return locations[0];
 		
+	}
+	else if(node && node->type == AstNodeType::IF){
+		size_t condition_offset = generate_ir(node->child.get());
+		char inst[100];
+		snprintf(inst, sizeof(inst), "MOV [CB], [VBA + %zu]\n",condition_offset);
+		Ir_Instruction ir_inst(
+					Ir_InstructionType::MOV_TO_CB,
+					inst,
+					condition_offset
+				);
+		ir_instructions.push_back(ir_inst);
+		// check if condition buffer is true
+		snprintf(inst, sizeof(inst), "\tCMP qword [CB], 1\n");
+		Ir_Instruction ir_inst2(
+					Ir_InstructionType::AS_IT_IS,
+					inst,
+					0
+				);
+		ir_instructions.push_back(ir_inst2);
+		// jump if not equal to main program block
+		snprintf(inst, sizeof(inst), "JNE .con_%zu\n",continue_count);
+		Ir_Instruction ir_inst3(
+					Ir_InstructionType::JMP_CON,
+					inst,
+					continue_count
+				);
+		ir_instructions.push_back(ir_inst3);
+		// generate ir for inner statements
+		for(const auto& stmt: node->instructions){
+			generate_ir(stmt.get());
+		}
+		snprintf(inst, sizeof(inst), ".con_%zu:\n", continue_count);
+		Ir_Instruction ir_inst4(
+				Ir_InstructionType::AS_IT_IS,
+				inst,
+				continue_count++
+			);
+		ir_instructions.push_back(ir_inst4);
+		return continue_count;
 	}
 	else{
 		throw std::runtime_error("Unknown ast type detected by Intermediate Code Generator \n");
