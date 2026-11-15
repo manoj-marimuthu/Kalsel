@@ -295,7 +295,27 @@ static AstNodePtr parseIf(){
 					if(current_token.type == TokenType::R_PAREN){
 						consume();
 					}else{
-						throw std::runtime_error("Exprect a closing '}' in if block \n");
+						throw std::runtime_error("Expected a closing '}' in if block \n");
+					}
+					// check for else
+					if(current_token.type == TokenType::ELSE){
+						consume();
+						if(current_token.type == TokenType::L_PAREN){
+							consume();
+						}else{
+							throw std::runtime_error("Missing '{' for else block \n");
+						}
+						while(current_token.type != TokenType::R_PAREN &&
+      						     current_token.type != TokenType::END_OF_FILE){
+							auto stmt = parseBlock();
+							node->else_instructions.push_back(std::move(stmt));
+						}
+						if(current_token.type == TokenType::R_PAREN){
+							consume();
+						}else{
+							throw std::runtime_error("Expected a closing '}' in else block \n");
+						}
+						node->has_else = true;
 					}
 					return node;
 				}else{

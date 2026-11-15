@@ -31,10 +31,12 @@ class AstNode{
 		std::unique_ptr<AstNode> right{};
 		std::unique_ptr<AstNode> child{};
 		std::unique_ptr<AstNode> next{};
-		std::vector<std::unique_ptr<AstNode>> instructions; 
+		std::vector<std::unique_ptr<AstNode>> instructions;
+		std::vector<std::unique_ptr<AstNode>> else_instructions;	
 		std::string string_data{};
 		double num_data{};
 		char char_data{};
+		bool has_else{};
 		AstNode(AstNodeType type):type(type){}
 		AstNode(AstNodeType type,std::string string_data):type(type),string_data(string_data){}
 		AstNode(AstNodeType type, double num_data):type(type), num_data(num_data){}

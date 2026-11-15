@@ -181,7 +181,7 @@ void code_gen(std::ofstream& file){
 			file << "\tMOV qword [VBA + " << inst.offset_1 << "], RAX\n";	
 		}
 		else if(inst.type == Ir_InstructionType::JMP_CON){
-			file << "\tJNE .con_" << inst.offset_1 << "\n";
+			file << "\tJE .con_" << inst.offset_1 << "\n";
 		}
 		else if(inst.type == Ir_InstructionType::AS_IT_IS){
 			file << inst.ir_instruction_string;

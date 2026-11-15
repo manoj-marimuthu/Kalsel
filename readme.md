@@ -38,6 +38,16 @@ io << 10;
 io << x << y + 2;
 ```
 
+### conditional statements
+
+```
+if(1){
+    io << 2;
+}
+else{
+    io << 3;
+}
+```
 ### meta
 
 The compiler accepts flags from the command line.
